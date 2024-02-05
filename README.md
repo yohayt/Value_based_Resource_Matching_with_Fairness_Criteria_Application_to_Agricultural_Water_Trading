@@ -1,0 +1,2 @@
+# Value_based_Resource_Matching_with_Fairness_Criteria_Application_to_Agricultural_Water_Trading
+Repository for the AAMAS 2024 paper: Value-based Resource Matching with Fairness Criteria: Application to Agricultural Water Trading
