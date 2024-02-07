@@ -17,7 +17,7 @@ from pdb import set_trace
 
 from max_welfare_fairness import optimize_welfare
 
-directory_path = '../../water/real/input'
+directory_path = ''
 #dataset = 'touchet'
 #delta = 10
 #acre_feet = 20

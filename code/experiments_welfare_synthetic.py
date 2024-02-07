@@ -1,7 +1,4 @@
-#!/usr/bin/env python
-import numpy as np
 import pandas as pd
-from pdb import set_trace
 import synthetic
 import util
 from algorithm1 import algorithm1
@@ -10,10 +7,10 @@ N = 10
 
 zp = []
 for i in range(100):
-    for delta in [0.3,0.5,0.7,0.9]:
+    for delta in [0.0,0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1.0]:
         for gamma in [0, 0.5, 1]:
-            for beta_high in [0.7]:
-                G = synthetic.TradingSyntheticGraph(gamma=gamma, beta_low=1-beta_high, beta_high=beta_high, delta=delta)
+            for beta_high in [0.7,0.9]:
+                G = synthetic.TradingSyntheticGraph(gamma=gamma, beta_low=1.0-beta_high, beta_high=beta_high, delta=delta)
                 num_sellers = 0
                 for node in G.compatibility_graph.nodes:
                     num_sellers += G.is_seller(node)

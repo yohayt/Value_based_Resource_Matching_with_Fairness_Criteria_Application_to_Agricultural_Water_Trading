@@ -4,35 +4,20 @@ Main file to run real networks.
 
 from re import sub
 import pandas as pd
-import argparse
 import glob
 import csv
 import os
-import random
 import time
-from pdb import set_trace
-
 import networkx as nx
 import numpy as np
-from scipy.optimize import linear_sum_assignment
 
-directory_path = '../../water/real/input'
-#dataset = 'touchet'
-#delta = 10
-#acre_feet = 20
+directory_path = ''
 
-def parser():
-    # parser
-    parser=argparse.ArgumentParser(description=DESC,
-            formatter_class=argparse.RawTextHelpFormatter)
-    parser.add_argument('-i', '--network', required=True, help='Network')
-    parser.add_argument('-d', '--delta', required=True, type=int,
-            help='Water availability')
-    parser.add_argument('-a', '--acre_feet', required=True, type=int,
-            help='Acre feet')
-    return parser.parse_args()
+def generate_graph(arg):
+    dataset = arg[0]
+    drought = arg[1]
+    acre_feet = arg[2]
 
-def generate_graph(dataset, drought, acre_feet):
     g = nx.Graph()
     # Use glob to get a list of all CSV files in the directory
     csv_files = glob.glob(os.path.join(directory_path, dataset, str(drought), str(acre_feet), '*.csv'))
@@ -128,7 +113,6 @@ def generate_graph(dataset, drought, acre_feet):
     # Solve the linear sum assignment problem
     mwm = nx.max_weight_matching(g)
     buyers = [node for node, data in g.nodes(data=True) if data["bipartite"] == 0]
-    sellers = [node for node, data in g.nodes(data=True) if data["bipartite"] == 1]
     mbuyers = {}
     msellers = {}
     for edge in mwm:
@@ -204,18 +188,23 @@ def generate_graph(dataset, drought, acre_feet):
     df['data'] = dataset
     df['network'] = df.data.str.capitalize() + df.acre_feet.astype('str')
     df = df.reset_index().rename(columns={'index': 'buyer'})
-    df.to_csv(f'sat.{dataset}_{acre_feet}_{drought}.csv',index=False)
-
-    print("weight is ", norm_weight)
-    print( f"{dataset.capitalize()}{acre_feet}", dataset, drought, acre_feet, len(g.edges()), len(g.nodes()), len(mbuyers.keys()), len(msellers.keys()), weight, weight2,  norm_weight, denominator, sep=',')
+    st = ",".join(map(str, [f"{dataset.capitalize()}{acre_feet}", dataset, drought, acre_feet, len(g.edges()), len(g.nodes()), len(mbuyers.keys()), len(msellers.keys()), weight, weight2,  norm_weight, denominator]))
+    return st,df
 
 if __name__ == '__main__':
-    args = parser()
-    generate_graph(args.network, args.delta, args.acre_feet)
-    ## #dataset = 'touchet'
-    ## #delta = 10
-    ## #acre_feet = 20
-    ## for dataset in {"touchet", "yakima"}:
-    ##     for drought in {10,20,30,40,50,60,70,80,90,100}:
-    ##         for acre_feet in {10}:
-    ##             generate_graph(dataset, drought,acre_feet)
+    args = []
+    for dataset in {"yakima", "touchet" }:
+        for acre in {5,10,20}:
+            for delta in range(10,100,10):
+                args.append((dataset,delta,acre))
+
+    ret = map(generate_graph, args)
+    with open(os.path.join("results","results_realdata.csv"),"w") as f:
+        print("network,data,delta,acre,num_edges,num_nodes,num_buyers,num_sellers,welfare,sellers_value_by_tot_value,sigma_T_by_sigma_0,sigma_0",file=f,flush=True)
+        dfs = []
+        for item,df in ret:
+            print(item, file=f, flush=True)
+            dfs.append(df)
+
+        concatenated_df = pd.concat(list(dfs), ignore_index=True)
+        concatenated_df.to_csv(os.path.join('results','sat.res.csv'), index=False)
